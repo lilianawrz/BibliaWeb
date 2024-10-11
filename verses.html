@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bíblia Online - Versículos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="index.html">Bíblia Online</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Versão: <span id="current-version">Carregando...</span>
+                    </a>
+                    <ul id="versions" class="dropdown-menu" aria-labelledby="navbarDropdown"></ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h1 id="chapter-title" class="text-center mb-4"></h1>
+    <div id="verses-container" class="row"></div>
+</div>
+
+
+<footer class="bg-light text-center py-3 mt-5">
+    <p class="mb-0">© 2024 Bíblia Online. Todos os direitos reservados.</p>
+</footer>
+
+<script>
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdHIiOiJUaHUgT2N0IDEwIDIwMjQgMDA6MjE6NTkgR01UKzAwMDAuNjcwNjk1OWVjNDlkYjcwMDI4OWU1ZTg3IiwiaWF0IjoxNzI4NTE5NzE5fQ.bFY3X2FctFx3VzxhLGe69oj8a-WALOkNxTO6oVMgsAw';
+    const apiUrl = 'https://www.abibliadigital.com.br/api';
+    const apiLogsUrl = 'https://www.piway.com.br/unoesc/api';
+    const matricula = '406447';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookAbbrev = urlParams.get('book');
+    const chapter = urlParams.get('chapter');
+    const bookName = urlParams.get('name');
+
+    document.getElementById('chapter-title').textContent = `Versículos do capítulo ${chapter} de ${bookName}`;
+
+
+
+    async function saveLog(metodo, resultado){
+      const response =  await fetch(`${apiLogsUrl}/inserir/log/${matricula}/abibliadigital/${metodo}/${resultado}`);
+        const log = await response.json();
+        console.log(log);
+    }
+
+    async function loadVersions() {
+        const response = await fetch(`${apiUrl}/versions`);
+        const versions = await response.json();
+
+        const versionsContainer = document.getElementById('versions');
+
+        versions.forEach(version => {
+            const versionElement = document.createElement('li');
+            versionElement.innerHTML = `<a class="dropdown-item" href="#" onclick="selectVersion('${version.version}')">${version.version}</a>`;
+            versionsContainer.appendChild(versionElement);
+        });
+        await saveLog('loadVersions', JSON.stringify(versions));
+    }
+
+
+    function displayCurrentVersion() {
+        const currentVersion = localStorage.getItem('selectedVersion') || 'nvi'; // Default 'nvi'
+        document.getElementById('current-version').textContent = currentVersion.toUpperCase();
+    }
+
+
+    async function selectVersion(version) {
+        localStorage.setItem('selectedVersion', version);
+        displayCurrentVersion();
+        await loadVerses();
+    }
+
+    async function loadVerses() {
+        const version = localStorage.getItem('selectedVersion') || 'nvi';
+        const response = await fetch(`${apiUrl}/verses/${version}/${bookAbbrev}/${chapter}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const verses = await response.json();
+        const versesContainer = document.getElementById('verses-container');
+
+
+        versesContainer.innerHTML = '';
+
+
+        verses.verses.forEach(verse => {
+            const verseElement = document.createElement('div');
+            verseElement.className = 'col-md-12';
+            verseElement.innerHTML = `<p><strong>${verse.number}.</strong> ${verse.text}</p>`;
+            versesContainer.appendChild(verseElement);
+        });
+        await saveLog('loadVerses', JSON.stringify(verses));
+    }
+
+
+    loadVersions();
+    displayCurrentVersion();
+    loadVerses();
+    loadLogs();
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+</body>
+</html>
