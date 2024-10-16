@@ -93,11 +93,7 @@
         });
         const verses = await response.json();
         const versesContainer = document.getElementById('verses-container');
-
-
         versesContainer.innerHTML = '';
-
-
         verses.verses.forEach(verse => {
             const verseElement = document.createElement('div');
             verseElement.className = 'col-md-12';
